@@ -15,8 +15,8 @@ namespace WebBrowser {
         type: number; // 当前网络
         private nodes_server: any; // 当前nelnode_server
 
-        url = "localhost";
-        //url = "115.159.68.43";
+        //url = "localhost";
+        url = "115.159.68.43";
 
         constructor(app: App) {
 

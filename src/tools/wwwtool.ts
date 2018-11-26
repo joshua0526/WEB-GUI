@@ -4,6 +4,31 @@ namespace WebBrowser {
 		static api: string = "http://localhost:59908/api/testnet/";
 		static apiaggr: string = "http://localhost:59999/api/testnet/";
 
+		static rpc: string = "http://127.0.0.1:20332/";
+        static rpcName: string = "";
+
+        static blockHeight:number = 0;
+        static chainHashLength:number = 1;
+        static ContractHash:string = "c4108917282bff79b156d4d01315df811790c0e8";
+
+		static makeZoroRpcUrl(url: string, method: string, ..._params: any[])
+        {
+
+
+            if (url[url.length - 1] != '/')
+                url = url + "/";
+            var urlout = url + "?jsonrpc=2.0&id=1&method=" + method + "&params=[";
+            for (var i = 0; i < _params.length; i++)
+            {
+                urlout += JSON.stringify(_params[i]);
+                if (i != _params.length - 1)
+                    urlout += ",";
+            }
+            urlout += "]";
+            return urlout;
+        }
+
+
 		static makeRpcUrl(method: string, ..._params: any[]) {
 			var url = WWW.api;
 			var urlout = WWW.makeUrl(method, url, ..._params);
@@ -299,5 +324,61 @@ namespace WebBrowser {
 			return r;
 		}
 
+		static async api_getAllAppChain(){
+            var str = WWW.makeZoroRpcUrl(WWW.rpc, "getappchainhashlist");
+            var result = await fetch(str, {"method":"get"});
+            var json = await result.json();
+            var r = json["result"]["hashlist"];
+            return r;
+		}
+		
+		static async api_getAppChainName(chainHash:string){
+            var str = WWW.makeZoroRpcUrl(WWW.rpc, "getappchainstate", chainHash);
+            var result = await fetch(str, {"method":"get"});
+            var json = await result.json();
+            var r = json["result"]["name"];
+            return r;
+		}
+		
+		static async api_getZoroHeight(chainHash:string)
+        {
+            var str = WWW.makeZoroRpcUrl(WWW.rpc, "getblockcount", chainHash);
+            var result = await fetch(str, { "method": "get" });
+            var json = await result.json();
+            var r = json["result"];
+            var height = parseInt(r as string) - 1;
+            return height;
+		}
+		
+		static async rpc_invokeScript(params:any){
+            var postdata = WWW.makeRpcPostBody("invokescript", params);
+            var result = await fetch(WWW.rpc, {"method":"post", "body":JSON.stringify(postdata)});
+            var json = await result.json();
+            return json["result"];
+		}
+		
+		static makeTran(address:string){
+            var tran = new  ThinNeo.Transaction();
+            tran.type = ThinNeo.TransactionType.InvocationTransaction;
+            tran.version = 1;           
+
+            var scriptHash = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(address);
+
+            tran.attributes = [];
+            tran.attributes[0] = new ThinNeo.Attribute();
+            tran.attributes[0].usage = ThinNeo.TransactionAttributeUsage.Script;
+            tran.attributes[0].data = scriptHash;
+            tran.inputs = [];
+            tran.outputs = [];
+           
+            return tran;
+		}
+		
+		static async rpc_sendrawtransaction(params:any){
+            var postdata = WWW.makeRpcPostBody("sendrawtransaction",params);
+            var result = await fetch(WWW.rpc, {"method":"post", "body":JSON.stringify(postdata)});
+            var json = await result.json();
+            return json;
+        }
 	}
 }

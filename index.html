@@ -14,6 +14,12 @@
         ZoroChain Explorer
     </title>
 
+    <script src="lib/rollup/aes.js"></script>
+    <script src="lib/component/aes.js"></script>
+    <script src="lib/component/mode-ecb.js"></script>
+    <script src="lib/component/pad-nopadding.js"></script>
+    <script src="lib/scrypt.js"></script>
+
     <!-- Bootstrap core CSS -->
     <link href="./css/bootstrap.css" rel="stylesheet">
     <link href="./css/mystyle.css" rel="stylesheet">
@@ -622,11 +628,6 @@
 		</div>
         <!--交易详情-->
         <div id="gui-info" class="container-nel" hidden style="min-height: 619px;">
-            <div>
-                <span>Oops! It looks like you are lost.</span>
-                <br>
-                <button class="btn">Go to Homepage</button>
-            </div>
         </div>
         <div id="transaction-info" style="min-height: 619px;">
             <div class="title">

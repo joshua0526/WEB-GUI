@@ -47,6 +47,88 @@ namespace WebBrowser
             }
         }
 
+        static ZoroFunction(){
+            var select = document.createElement('select');
+            var sitem = document.createElement("option");
+            sitem.text = "NEO->ZORO";
+            sitem.value = "NEO";
+            select.appendChild(sitem);
+
+            var sitem = document.createElement("option");
+            sitem.text = "ZORO->NEO";
+            sitem.value = "ZORO";
+            select.appendChild(sitem);
+
+            return select;
+        }
+
+        static ZoroAsset(){
+            var select = document.createElement('select');
+            var sitem = document.createElement("option");
+            sitem.text = "BCP";
+            sitem.value = "BCP";
+            select.appendChild(sitem);
+
+            var sitem = document.createElement("option");
+            sitem.text = "NEO";
+            sitem.value = "NEO";
+            select.appendChild(sitem);
+
+            var sitem = document.createElement("option");
+            sitem.text = "GAS";
+            sitem.value = "GAS";
+            select.appendChild(sitem);
+
+            return select;
+        }
+
+        static makeZoroTran(address:string, targetaddr:string, sendcount:Neo.Fixed8, assetid:string, chainHash:string): ThinNeo.Transaction
+        {
+            if (sendcount.compareTo(Neo.Fixed8.Zero) <= 0)
+               throw new Error("can not send zero.");           
+            
+            var array = [];
+            var sb = new ThinNeo.ScriptBuilder();            
+           
+            var randomBytes = new Uint8Array(32);            
+            var key = Neo.Cryptography.RandomNumberGenerator.getRandomValues<Uint8Array>(randomBytes);
+            var randomNum = new Neo.BigInteger(key);
+            sb.EmitPushNumber(randomNum);
+            sb.Emit(ThinNeo.OpCode.DROP);
+            array.push("(addr)" + address);
+            array.push("(addr)" + targetaddr);
+            array.push("(int)" + sendcount);
+            sb.EmitParamJson(array);
+            sb.EmitPushString("transfer");
+            sb.EmitAppCall(assetid.hexToBytes().reverse());
+            // var scripthash = sb.ToArray().toHexString();
+
+            // var postArray = [];
+            // postArray.push(chainHash);
+            // postArray.push(scripthash);
+
+            var extdata = new ThinNeo.InvokeTransData();
+            extdata.script = sb.ToArray();
+            extdata.gas = Neo.Fixed8.Zero;
+
+            var tran = new  ThinNeo.Transaction();
+            tran.type = ThinNeo.TransactionType.InvocationTransaction;
+            tran.version = 1;
+            
+            tran.extdata = extdata;
+
+            var scriptHash = ThinNeo.Helper.GetPublicKeyScriptHash_FromAddress(address);
+
+            tran.attributes = [];
+            tran.attributes[0] = new ThinNeo.Attribute();
+            tran.attributes[0].usage = ThinNeo.TransactionAttributeUsage.Script;
+            tran.attributes[0].data = scriptHash;
+            tran.inputs = [];
+            tran.outputs = [];
+           
+            return tran;
+        }
+
         static makeTran(utxos: { [id: string]: UTXO[] }, targetaddr: string, assetid: string, sendcount: Neo.Fixed8): ThinNeo.Transaction
         {
             if (sendcount.compareTo(Neo.Fixed8.Zero) <= 0)
